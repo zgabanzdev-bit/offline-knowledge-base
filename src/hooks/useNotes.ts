@@ -3,14 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { db, type Note } from '@/lib/db';
 
 type CreateNoteInput = Partial<Pick<Note, 'title' | 'content' | 'tags'>>;
+type UpdateNoteInput = Partial<Omit<Note, 'id' | 'createdAt'>>;
 
 export function useNotes() {
-  // useLiveQuery подписывается на изменения таблицы 'notes' и
-  // автоматически перерендерит компонент при любой мутации через db.notes.*
-  const notes = useLiveQuery(
-    () => db.notes.orderBy('updatedAt').reverse().toArray(),
-    [], // deps — пусто, т.к. запрос не зависит от внешнего стейта
-  );
+  const notes = useLiveQuery(() => db.notes.orderBy('updatedAt').reverse().toArray(), []);
 
   const createNote = async (input: CreateNoteInput = {}): Promise<string> => {
     const now = Date.now();
@@ -30,9 +26,29 @@ export function useNotes() {
     return note.id;
   };
 
+  const updateNote = async (id: string, patch: UpdateNoteInput): Promise<void> => {
+    await db.notes.update(id, {
+      ...patch,
+      updatedAt: Date.now(),
+    });
+  };
+
+  const deleteNote = async (id: string): Promise<void> => {
+    // TODO: нужно будет пройтись по
+    // db.notes.where('backlinks').equals(id) и вычистить ссылки на удалённую
+    // заметку из чужих backlinks-массивов
+    await db.notes.delete(id);
+  };
+
+  const getNoteById = async (id: string): Promise<Note | undefined> => {
+    return db.notes.get(id);
+  };
+
   return {
-    /** undefined во время первой загрузки, затем массив — используй для skeleton-стейта */
     notes,
     createNote,
+    updateNote,
+    deleteNote,
+    getNoteById,
   };
 }
