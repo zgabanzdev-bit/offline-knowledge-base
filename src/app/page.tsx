@@ -5,10 +5,11 @@ import { useActiveNote } from '@/hooks/useActiveNote';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Editor } from '@/components/editor/Editor';
 
 export default function Home() {
   const { notes, createNote, deleteNote } = useNotes();
-  const { activeNoteId, setActiveNoteId, activeNote } = useActiveNote();
+  const { activeNoteId, setActiveNoteId } = useActiveNote();
 
   return (
     <AppShell
@@ -49,17 +50,8 @@ export default function Home() {
           </ul>
         </div>
       }
-      editor={
-        <div className="p-8">
-          {activeNote ? (
-            <div className="text-muted-foreground">
-              Editor placeholder for: <b>{activeNote.title}</b>
-            </div>
-          ) : (
-            <div className="text-muted-foreground">Select or create a note</div>
-          )}
-        </div>
-      }
+      editor={<Editor />}
+
       metaPanel={<div className="p-4 text-sm text-muted-foreground">Meta panel placeholder</div>}
     />
   );

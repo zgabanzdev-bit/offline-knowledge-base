@@ -44,11 +44,24 @@ export function useNotes() {
     return db.notes.get(id);
   };
 
+  const linkNotes = async (sourceNoteId: string, targetNoteId: string): Promise<void> => {
+    if (sourceNoteId === targetNoteId) return;
+    await db.notes
+      .where('id')
+      .equals(targetNoteId)
+      .modify((note) => {
+        if (!note.backlinks.includes(sourceNoteId)) {
+          note.backlinks.push(sourceNoteId);
+        }
+      });
+  };
+
   return {
     notes,
     createNote,
     updateNote,
     deleteNote,
     getNoteById,
+    linkNotes,
   };
 }

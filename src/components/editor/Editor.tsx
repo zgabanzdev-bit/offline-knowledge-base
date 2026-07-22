@@ -1,0 +1,95 @@
+'use client';
+
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { useEffect, useState } from 'react';
+import { WikiLink } from './WikiLinkExtension';
+import { createWikiLinkSuggestion } from './createWikiLinkSuggestion';
+import { useActiveNote } from '@/hooks/useActiveNote';
+import { useNotes } from '@/hooks/useNotes';
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
+
+type SaveStatus = 'idle' | 'saving' | 'saved';
+
+export function Editor() {
+  const { activeNoteId, activeNote, setActiveNoteId } = useActiveNote();
+  const { notes, updateNote, linkNotes } = useNotes();
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+
+  const [renderedNoteId, setRenderedNoteId] = useState(activeNoteId);
+  if (activeNoteId !== renderedNoteId) {
+    setRenderedNoteId(activeNoteId);
+    setSaveStatus('idle');
+  }
+
+  const debouncedSave = useDebouncedCallback((id: string, html: string) => {
+    updateNote(id, { content: html }).then(() => setSaveStatus('saved'));
+  }, 500);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      WikiLink.configure({
+        suggestion: createWikiLinkSuggestion(),
+        onLinkInserted: (targetId) => {
+          if (activeNoteId) linkNotes(activeNoteId, targetId);
+        },
+      }),
+    ],
+    content: activeNote?.content ?? '',
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[300px]',
+      },
+      handleClick: (_view, _pos, event) => {
+        const target = event.target as HTMLElement;
+        const noteId = target.closest('[data-note-id]')?.getAttribute('data-note-id');
+        if (noteId) {
+          setActiveNoteId(noteId);
+          return true;
+        }
+        return false;
+      },
+    },
+    onUpdate: ({ editor }) => {
+      if (!activeNoteId) return;
+      setSaveStatus('saving');
+      debouncedSave(activeNoteId, editor.getHTML());
+    },
+    immediatelyRender: false,
+  });
+
+  useEffect(() => {
+    if (!editor) return;
+    const items = (notes ?? [])
+      .filter((n) => n.id !== activeNoteId)
+      .map((n) => ({ id: n.id, title: n.title }));
+    editor.commands.setWikiLinkItems(items);
+  }, [editor, notes, activeNoteId]);
+
+  useEffect(() => {
+    if (!editor || !activeNote) return;
+    if (editor.getHTML() !== activeNote.content) {
+      editor.commands.setContent(activeNote.content, { emitUpdate: false });
+    }
+  }, [editor, activeNote]);
+
+  if (!activeNoteId) {
+    return <div className="p-8 text-muted-foreground">Select or create a note</div>;
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b px-4 py-2 text-xs text-muted-foreground">
+        <span>{activeNote?.title}</span>
+        <span>
+          {saveStatus === 'saving' && 'Saving…'}
+          {saveStatus === 'saved' && 'Saved'}
+        </span>
+      </div>
+      <div className="flex-1 overflow-y-auto p-6">
+        <EditorContent editor={editor} />
+      </div>
+    </div>
+  );
+}
