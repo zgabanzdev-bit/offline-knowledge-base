@@ -31,8 +31,8 @@ export function Editor() {
       StarterKit,
       WikiLink.configure({
         suggestion: createWikiLinkSuggestion(),
-        onLinkInserted: (targetId) => {
-          if (activeNoteId) linkNotes(activeNoteId, targetId);
+        onLinkInserted: (sourceNoteId, targetNoteId) => {
+          if (sourceNoteId) linkNotes(sourceNoteId, targetNoteId);
         },
       }),
     ],
@@ -52,9 +52,10 @@ export function Editor() {
       },
     },
     onUpdate: ({ editor }) => {
-      if (!activeNoteId) return;
+      const sourceId = editor.storage.wikiLink.activeNoteId;
+      if (!sourceId) return;
       setSaveStatus('saving');
-      debouncedSave(activeNoteId, editor.getHTML());
+      debouncedSave(sourceId, editor.getHTML());
     },
     immediatelyRender: false,
   });
@@ -65,6 +66,7 @@ export function Editor() {
       .filter((n) => n.id !== activeNoteId)
       .map((n) => ({ id: n.id, title: n.title }));
     editor.commands.setWikiLinkItems(items);
+    editor.commands.setActiveNoteId(activeNoteId);
   }, [editor, notes, activeNoteId]);
 
   useEffect(() => {

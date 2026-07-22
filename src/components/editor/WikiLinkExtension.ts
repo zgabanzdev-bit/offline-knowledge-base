@@ -7,15 +7,14 @@ export const WikiLinkPluginKey = new PluginKey('wikiLink');
 
 interface WikiLinkOptions {
   suggestion: Partial<SuggestionOptions>;
-  onLinkInserted?: (targetNoteId: string) => void;
+  onLinkInserted?: (sourceNoteId: string | null, targetNoteId: string) => void;
 }
 
 interface WikiLinkStorage {
   items: WikiLinkItem[];
+  activeNoteId: string | null;
 }
 
-// Module augmentation: расширяем встроенные типы TipTap собственным storage
-// и command-ом. Без этого TS видит editor.storage как {} и не знает о наших полях
 declare module '@tiptap/core' {
   interface Storage {
     wikiLink: WikiLinkStorage;
@@ -24,6 +23,7 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     wikiLink: {
       setWikiLinkItems: (items: WikiLinkItem[]) => ReturnType;
+      setActiveNoteId: (id: string | null) => ReturnType;
     };
   }
 }
@@ -44,6 +44,7 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
   addStorage() {
     return {
       items: [],
+      activeNoteId: null,
     };
   },
 
@@ -83,6 +84,10 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
         this.storage.items = items;
         return true;
       },
+      setActiveNoteId: (id: string | null) => () => {
+        this.storage.activeNoteId = id;
+        return true;
+      },
     };
   },
 
@@ -101,7 +106,7 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
             ])
             .run();
 
-          this.options.onLinkInserted?.(props.id);
+          this.options.onLinkInserted?.(this.storage.activeNoteId, props.id);
         },
       }),
     ];

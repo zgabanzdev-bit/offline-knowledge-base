@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Editor } from '@/components/editor/Editor';
+import { RightPanel } from '@/components/panels/RightPanel';
 
 export default function Home() {
   const { notes, createNote, deleteNote } = useNotes();
@@ -52,7 +53,7 @@ export default function Home() {
       }
       editor={<Editor />}
 
-      metaPanel={<div className="p-4 text-sm text-muted-foreground">Meta panel placeholder</div>}
+      metaPanel={<RightPanel />}
     />
   );
 }
