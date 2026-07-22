@@ -25,13 +25,12 @@ class KnowledgeBaseDB extends Dexie {
     super('KnowledgeBaseDB');
 
     this.version(1).stores({
-      // 'id' — primary key. '*tags' — multi-entry индекс: Dexie/IndexedDB
-      // сам разворачивает массив в отдельные записи индекса, что даёт
-      // db.notes.where('tags').equals('project-x') без ручного JOIN.
-      // 'content' НЕ индексируем — полнотекстовый поиск по контенту
-      // будет через MiniSearch (in-memory), IndexedDB индекс тут бесполезен
-      // и только раздувает размер БД.
       notes: 'id, title, *tags, createdAt, updatedAt, isPinned, isArchived',
+      settings: 'key',
+    });
+
+    this.version(2).stores({
+      notes: 'id, title, *tags, *backlinks, createdAt, updatedAt, isPinned, isArchived',
       settings: 'key',
     });
   }

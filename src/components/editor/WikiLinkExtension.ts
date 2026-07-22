@@ -1,9 +1,11 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
-import { PluginKey } from '@tiptap/pm/state';
+import { Plugin as ProseMirrorPlugin, PluginKey } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { WikiLinkItem } from './WikiLinkList';
 
 export const WikiLinkPluginKey = new PluginKey('wikiLink');
+const WikiLinkDecorationsPluginKey = new PluginKey('wikiLinkDecorations');
 
 interface WikiLinkOptions {
   suggestion: Partial<SuggestionOptions>;
@@ -12,6 +14,7 @@ interface WikiLinkOptions {
 
 interface WikiLinkStorage {
   items: WikiLinkItem[];
+  allNoteIds: Set<string>;
   activeNoteId: string | null;
 }
 
@@ -23,6 +26,7 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     wikiLink: {
       setWikiLinkItems: (items: WikiLinkItem[]) => ReturnType;
+      setAllNoteIds: (ids: string[]) => ReturnType;
       setActiveNoteId: (id: string | null) => ReturnType;
     };
   }
@@ -44,6 +48,7 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
   addStorage() {
     return {
       items: [],
+      allNoteIds: new Set<string>(),
       activeNoteId: null,
     };
   },
@@ -71,8 +76,8 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
     return [
       'span',
       mergeAttributes(HTMLAttributes, {
-        class:
-          'wiki-link cursor-pointer rounded bg-primary/10 px-1 text-primary hover:bg-primary/20',
+        class: 'wiki-link cursor-pointer rounded px-1',
+        'data-note-id': node.attrs.noteId,
       }),
       `[[${node.attrs.title}]]`,
     ];
@@ -84,6 +89,13 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
         this.storage.items = items;
         return true;
       },
+      setAllNoteIds:
+        (ids: string[]) =>
+        ({ tr, dispatch }) => {
+          this.storage.allNoteIds = new Set(ids);
+          if (dispatch) dispatch(tr);
+          return true;
+        },
       setActiveNoteId: (id: string | null) => () => {
         this.storage.activeNoteId = id;
         return true;
@@ -107,6 +119,30 @@ export const WikiLink = Node.create<WikiLinkOptions, WikiLinkStorage>({
             .run();
 
           this.options.onLinkInserted?.(this.storage.activeNoteId, props.id);
+        },
+      }),
+      new ProseMirrorPlugin({
+        key: WikiLinkDecorationsPluginKey,
+        props: {
+          decorations: (state) => {
+            const decorations: Decoration[] = [];
+
+            state.doc.descendants((node, pos) => {
+              if (node.type.name !== this.name) return;
+
+              const exists = this.storage.allNoteIds.has(node.attrs.noteId);
+              decorations.push(
+                Decoration.node(pos, pos + node.nodeSize, {
+                  class: exists
+                    ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                    : 'bg-destructive/10 text-destructive line-through cursor-not-allowed',
+                  title: exists ? '' : 'Note was deleted',
+                }),
+              );
+            });
+
+            return DecorationSet.create(state.doc, decorations);
+          },
         },
       }),
     ];

@@ -62,10 +62,12 @@ export function Editor() {
 
   useEffect(() => {
     if (!editor) return;
-    const items = (notes ?? [])
-      .filter((n) => n.id !== activeNoteId)
-      .map((n) => ({ id: n.id, title: n.title }));
-    editor.commands.setWikiLinkItems(items);
+    const allNotes = notes ?? [];
+
+    editor.commands.setWikiLinkItems(
+      allNotes.filter((n) => n.id !== activeNoteId).map((n) => ({ id: n.id, title: n.title })),
+    );
+    editor.commands.setAllNoteIds(allNotes.map((n) => n.id));
     editor.commands.setActiveNoteId(activeNoteId);
   }, [editor, notes, activeNoteId]);
 

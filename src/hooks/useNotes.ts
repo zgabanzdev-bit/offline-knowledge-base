@@ -34,10 +34,16 @@ export function useNotes() {
   };
 
   const deleteNote = async (id: string): Promise<void> => {
-    // TODO: нужно будет пройтись по
-    // db.notes.where('backlinks').equals(id) и вычистить ссылки на удалённую
-    // заметку из чужих backlinks-массивов
-    await db.notes.delete(id);
+    await db.transaction('rw', db.notes, async () => {
+      await db.notes
+        .where('backlinks')
+        .equals(id)
+        .modify((note) => {
+          note.backlinks = note.backlinks.filter((backlinkId) => backlinkId !== id);
+        });
+
+      await db.notes.delete(id);
+    });
   };
 
   const getNoteById = async (id: string): Promise<Note | undefined> => {
