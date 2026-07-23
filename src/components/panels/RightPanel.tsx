@@ -3,6 +3,7 @@
 import { useActiveNote } from '@/hooks/useActiveNote';
 import { MetadataPanel } from './MetadataPanel';
 import { BacklinksPanel } from './BacklinksPanel';
+import { AIPanel } from './AIPanel';
 
 export function RightPanel() {
   const { activeNoteId } = useActiveNote();
@@ -16,6 +17,7 @@ export function RightPanel() {
       <MetadataPanel />
       <div className="border-t pt-4">
         <BacklinksPanel />
+        <AIPanel />
       </div>
     </div>
   );

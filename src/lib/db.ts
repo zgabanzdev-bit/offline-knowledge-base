@@ -17,9 +17,16 @@ export interface Setting {
   value: unknown;
 }
 
+export interface NoteEmbedding {
+  noteId: string;
+  vector: number[];
+  contentHash: string;
+}
+
 class KnowledgeBaseDB extends Dexie {
   notes!: Table<Note, string>;
   settings!: Table<Setting, string>;
+  embeddings!: Table<NoteEmbedding, string>;
 
   constructor() {
     super('KnowledgeBaseDB');
@@ -32,6 +39,12 @@ class KnowledgeBaseDB extends Dexie {
     this.version(2).stores({
       notes: 'id, title, *tags, *backlinks, createdAt, updatedAt, isPinned, isArchived',
       settings: 'key',
+    });
+
+    this.version(3).stores({
+      notes: 'id, title, *tags, *backlinks, createdAt, updatedAt, isPinned, isArchived',
+      settings: 'key',
+      embeddings: 'noteId',
     });
   }
 }

@@ -21,7 +21,7 @@ export function AppShell({ sidebar, editor, metaPanel }: AppShellProps) {
           isLeftPanelOpen ? 'w-64' : 'w-0',
         )}
       >
-        {sidebar}
+        <div className="h-full w-64 overflow-y-auto">{sidebar}</div>
       </aside>
 
       <main className="flex-1 min-w-0 overflow-y-auto">{editor}</main>
@@ -32,7 +32,7 @@ export function AppShell({ sidebar, editor, metaPanel }: AppShellProps) {
           isRightPanelOpen ? 'w-72' : 'w-0',
         )}
       >
-        {metaPanel}
+        <div className="h-full w-72 overflow-y-auto">{metaPanel}</div>
       </aside>
     </div>
   );
