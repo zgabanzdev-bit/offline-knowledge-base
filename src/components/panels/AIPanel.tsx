@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useActiveNote } from '@/hooks/useActiveNote';
 import { useNotes } from '@/hooks/useNotes';
 import { useAIWorker } from '@/hooks/useAIWorker';
 import { useSimilarNotes } from '@/hooks/useSimilarNotes';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/components/ui/button';
 
 function stripHtml(html: string): string {
@@ -26,6 +28,13 @@ export function AIPanel() {
   const [busy, setBusy] = useState<'summarize' | 'tags' | 'similar' | null>(null);
 
   const [renderedAINoteId, setRenderedAINoteId] = useState(activeNote?.id ?? null);
+
+  const shouldReduceMotion = useReducedMotion();
+
+  const revealVariants = {
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 8 },
+    visible: { opacity: 1, y: 0 },
+  };
 
   if ((activeNote?.id ?? null) !== renderedAINoteId) {
     setRenderedAINoteId(activeNote?.id ?? null);
@@ -81,11 +90,19 @@ export function AIPanel() {
     <div className="space-y-4 border-t pt-4">
       <h3 className="text-xs font-medium uppercase text-muted-foreground">AI Assistant</h3>
 
-      {progress && (
-        <p className="text-xs text-muted-foreground">
-          Loading model{progress.progress ? `: ${Math.round(progress.progress)}%` : '…'}
-        </p>
-      )}
+      <AnimatePresence mode="popLayout">
+        {progress && (
+          <motion.p
+            key="progress"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-xs text-muted-foreground"
+          >
+            Loading model{progress.progress ? `: ${Math.round(progress.progress)}%` : '…'}
+          </motion.p>
+        )}
+      </AnimatePresence>
 
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="secondary" disabled={busy !== null} onClick={handleSummarize}>
@@ -104,35 +121,82 @@ export function AIPanel() {
         </Button>
       </div>
 
-      {summary && <p className="rounded bg-muted p-2 text-sm">{summary}</p>}
+      <AnimatePresence mode="wait">
+        {busy && (
+          <motion.div
+            key="thinking"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          >
+            {[0, 1, 2].map((i) => (
+              <motion.span
+                key={i}
+                className="h-1 w-1 rounded-full bg-current"
+                animate={shouldReduceMotion ? {} : { opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+              />
+            ))}
+            Thinking
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {summary && (
+          <motion.p
+            key="summary"
+            variants={revealVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            className="rounded bg-muted p-2 text-sm"
+          >
+            {summary}
+          </motion.p>
+        )}
+      </AnimatePresence>
 
       {suggestedTags.length > 0 && (
-        <div className="flex flex-wrap gap-1">
+        <motion.div
+          className="flex flex-wrap gap-1"
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
+        >
           {suggestedTags.map((tag) => (
-            <button
+            <motion.button
               key={tag}
+              variants={revealVariants}
               onClick={() => applyTag(tag)}
               className="rounded-full border border-dashed px-2 py-0.5 text-xs hover:bg-accent"
             >
               + {tag}
-            </button>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {similar.length > 0 && (
-        <ul className="space-y-1">
+        <motion.ul
+          className="space-y-1"
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+        >
           {similar.map((s) => (
-            <li
+            <motion.li
               key={s.noteId}
+              variants={revealVariants}
               onClick={() => setActiveNoteId(s.noteId)}
               className="cursor-pointer truncate rounded px-2 py-1 text-sm hover:bg-accent"
             >
               {s.title}{' '}
               <span className="text-xs text-muted-foreground">({(s.score * 100).toFixed(0)}%)</span>
-            </li>
+            </motion.li>
           ))}
-        </ul>
+        </motion.ul>
       )}
     </div>
   );

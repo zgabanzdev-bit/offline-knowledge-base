@@ -1,5 +1,6 @@
 'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
 import { useNotes } from '@/hooks/useNotes';
 import { useActiveNote } from '@/hooks/useActiveNote';
 import { AppShell } from '@/components/layout/AppShell';
@@ -33,28 +34,35 @@ export default function Home() {
               + New note
             </Button>
             <ul className="text-sm space-y-1">
-              {notes?.map((note) => (
-                <li
-                  key={note.id}
-                  onClick={() => setActiveNoteId(note.id)}
-                  className={cn(
-                    'truncate cursor-pointer rounded px-2 py-1 flex justify-between group',
-                    activeNoteId === note.id ? 'bg-accent' : 'hover:bg-accent/50',
-                  )}
-                >
-                  <span className="truncate">{note.title}</span>
-                  <button
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteNote(note.id);
-                      if (activeNoteId === note.id) setActiveNoteId(null);
-                    }}
+              <AnimatePresence initial={false}>
+                {notes?.map((note) => (
+                  <motion.li
+                    key={note.id}
+                    layout
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.15 }}
+                    onClick={() => setActiveNoteId(note.id)}
+                    className={cn(
+                      'truncate cursor-pointer rounded px-2 py-1 flex justify-between group',
+                      activeNoteId === note.id ? 'bg-accent' : 'hover:bg-accent/50',
+                    )}
                   >
-                    ✕
-                  </button>
-                </li>
-              ))}
+                    <span className="truncate">{note.title}</span>
+                    <button
+                      className="opacity-0 group-hover:opacity-100 text-muted-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNote(note.id);
+                        if (activeNoteId === note.id) setActiveNoteId(null);
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
             </ul>
           </div>
         }

@@ -3,6 +3,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { WikiLink } from './WikiLinkExtension';
 import { createWikiLinkSuggestion } from './createWikiLinkSuggestion';
 import { useActiveNote } from '@/hooks/useActiveNote';
@@ -110,10 +111,19 @@ export function Editor() {
           placeholder="Untitled"
         />
 
-        <span>
-          {saveStatus === 'saving' && 'Saving…'}
-          {saveStatus === 'saved' && 'Saved'}
-        </span>
+        <AnimatePresence mode="wait">
+          {saveStatus !== 'idle' && (
+            <motion.span
+              key={saveStatus}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              {saveStatus === 'saving' ? 'Saving…' : 'Saved'}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
