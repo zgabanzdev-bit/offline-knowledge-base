@@ -9,6 +9,7 @@ import { Editor } from '@/components/editor/Editor';
 import { RightPanel } from '@/components/panels/RightPanel';
 import { useSearchIndex } from '@/hooks/useSearchIndex';
 import { CommandPalette } from '@/components/command-palette/CommandPalette';
+import { OfflineBanner } from '@/components/OfflineBanner';
 
 export default function Home() {
   const { notes, createNote, deleteNote } = useNotes();
@@ -18,6 +19,7 @@ export default function Home() {
   return (
     <>
       <CommandPalette />
+      <OfflineBanner />
       <AppShell
         sidebar={
           <div className="p-4 space-y-2">
