@@ -1,14 +1,9 @@
 import { useState } from 'react';
 import { db } from '@/lib/db';
 import { simpleHash } from '@/lib/hash';
+import { cosineSimilarity } from '@/lib/similarity';
 import { useAIWorker } from './useAIWorker';
 import { useNotes } from './useNotes';
-
-function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0;
-  for (let i = 0; i < a.length; i++) dot += a[i] * b[i];
-  return dot;
-}
 
 export function useSimilarNotes() {
   const { embed } = useAIWorker();

@@ -37,6 +37,7 @@ export function NotesList({ notes, activeNoteId, onSelect, onCreate, onDelete }:
             >
               <span className="truncate">{note.title}</span>
               <button
+                aria-label={`Delete "${note.title}"`}
                 className="text-muted-foreground opacity-0 group-hover:opacity-100 lg:opacity-0"
                 onClick={(e) => {
                   e.stopPropagation();
