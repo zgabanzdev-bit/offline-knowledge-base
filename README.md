@@ -2,7 +2,7 @@
 
 A local-first, offline-capable knowledge management app — think Obsidian/Notion, but every byte of your data lives on your own device, and the "smart" features run entirely inside your browser, no API keys, no server, no data leaving your machine.
 
-**[🔗 Live Demo](https://offline-knowledge-base.vercel.app/)**
+**[🔗 Live Demo](https://zgabanzdev-bit.github.io/offline-knowledge-base/)**
 
 ### Screenshots
 
